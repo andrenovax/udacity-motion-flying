@@ -40,6 +40,57 @@ def create_grid(data, drone_altitude, safety_distance):
 
     return grid, int(north_min), int(east_min)
 
+def get_grid_position(grid, north_min, east_min, north, east):
+    north_size = grid.shape[0]
+    east_size = grid.shape[1]
+
+    x = int(np.clip(north - north_min, 0, north_size - 1))
+    y = int(np.clip(east - east_min, 0, east_size - 1))
+
+    return (x, y)
+
+def filter_collinear_waypoints(waypoints, epsilon=1e-2):
+    if len(waypoints) < 3:
+        return waypoints
+
+    non_collinear_points = [waypoints[0]]
+
+    # Loop through every other point and compare slopes
+    for i in range(1, len(waypoints) - 1):
+        p1 = non_collinear_points[-1]
+        p2 = waypoints[i]
+        p3 = waypoints[i + 1]
+
+        matrix = np.array([
+            [p1[0], p1[1], 1],
+            [p2[0], p2[1], 1],
+            [p3[0], p3[1], 1]
+        ])
+
+        det = np.linalg.det(matrix)
+
+        if abs(det) > epsilon:
+            non_collinear_points.append(p2)
+
+    non_collinear_points.append(waypoints[-1])
+    
+    return non_collinear_points
+
+def random_lon_lat(data):
+    north_min = np.min(data[:, 0] - data[:, 3])
+    north_max = np.max(data[:, 0] + data[:, 3])
+
+    # minimum and maximum east coordinates
+    east_min = np.min(data[:, 1] - data[:, 4])
+    east_max = np.max(data[:, 1] + data[:, 4])
+
+    x = np.random.randint(north_min, north_max)
+    y = np.random.randint(east_min, east_max)
+
+    return (x, y)
+
+
+DIAGONAL_COST = np.sqrt(2)
 
 # Assume all actions cost the same.
 class Action(Enum):
@@ -55,6 +106,10 @@ class Action(Enum):
     EAST = (0, 1, 1)
     NORTH = (-1, 0, 1)
     SOUTH = (1, 0, 1)
+    SOUTH_WEST = (1, -1, DIAGONAL_COST)
+    SOUTH_EAST = (1, 1, DIAGONAL_COST)
+    NORTH_WEST = (-1, -1, DIAGONAL_COST)
+    NORTH_EAST = (-1, 1, DIAGONAL_COST)
 
     @property
     def cost(self):
@@ -84,6 +139,14 @@ def valid_actions(grid, current_node):
         valid_actions.remove(Action.WEST)
     if y + 1 > m or grid[x, y + 1] == 1:
         valid_actions.remove(Action.EAST)
+    if x - 1 < 0 or y - 1 < 0 or grid[x - 1, y - 1] == 1:
+        valid_actions.remove(Action.NORTH_WEST)
+    if x + 1 > n or y - 1 < 0 or grid[x + 1, y - 1] == 1:
+        valid_actions.remove(Action.SOUTH_WEST)
+    if x - 1 < 0 or y + 1 > m or grid[x - 1, y + 1] == 1:
+        valid_actions.remove(Action.NORTH_EAST)
+    if x + 1 > n or y + 1 > m or grid[x + 1, y + 1] == 1:
+        valid_actions.remove(Action.SOUTH_EAST)
 
     return valid_actions
 
