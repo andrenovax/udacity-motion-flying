@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid, get_grid_position, random_lon_lat, filter_collinear_waypoints
+from planning_utils import a_star, heuristic, create_grid, get_grid_item_position, random_lon_lat, filter_collinear_waypoints
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -154,13 +154,16 @@ class MotionPlanning(Drone):
         grid_start = (-north_offset, -east_offset)
         # TODO: convert start position to current position rather than map center
 
-        grid_start = get_grid_position(grid, north_offset, east_offset, self.local_position[0], self.local_position[1])
+        grid_start = get_grid_item_position(north_offset, east_offset, self.global_home[0], self.global_home[1])
         
         # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 10, -east_offset + 10)
+        # grid_goal = (-north_offset + 10, -east_offset + 10)
+
         # TODO: adapt to set goal as latitude / longitude position and convert
-        random_goal = random_lon_lat(data)
-        grid_goal = get_grid_position(grid, north_offset, east_offset, random_goal[0], random_goal[1])
+        # grid_goal = random_lon_lat(data)
+        grid_goal = (lon0 + 10, lat0 + 10)
+
+        grid_goal = get_grid_item_position(north_offset, east_offset, grid_goal[0], grid_goal[1])
 
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation

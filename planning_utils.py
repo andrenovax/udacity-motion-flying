@@ -40,14 +40,8 @@ def create_grid(data, drone_altitude, safety_distance):
 
     return grid, int(north_min), int(east_min)
 
-def get_grid_position(grid, north_min, east_min, north, east):
-    north_size = grid.shape[0]
-    east_size = grid.shape[1]
-
-    x = int(np.clip(north - north_min, 0, north_size - 1))
-    y = int(np.clip(east - east_min, 0, east_size - 1))
-
-    return (x, y)
+def get_grid_item_position(north_min, east_min, north, east):
+    return (int(north - north_min), int(east - east_min))
 
 def filter_collinear_waypoints(waypoints, epsilon=1e-2):
     if len(waypoints) < 3:
