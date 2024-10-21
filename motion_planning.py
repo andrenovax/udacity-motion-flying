@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid, get_grid_item_position, random_lon_lat, filter_collinear_waypoints
+from planning_utils import a_star, heuristic, create_grid, filter_collinear_waypoints
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -141,7 +141,7 @@ class MotionPlanning(Drone):
         position = self.global_position
  
         # TODO: convert to current local position using global_to_local()
-        self._north, self._east, self._altitude = global_to_local(position, self.global_home)
+        current_north, current_east, _ = global_to_local(position, self.global_home)
     
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
                                                                          self.local_position))
@@ -151,19 +151,15 @@ class MotionPlanning(Drone):
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
-        grid_start = (-north_offset, -east_offset)
         # TODO: convert start position to current position rather than map center
+        grid_start = (int(current_north) - north_offset, int(current_east) - east_offset)
 
-        grid_start = get_grid_item_position(north_offset, east_offset, self.global_home[0], self.global_home[1])
-        
         # Set goal as some arbitrary position on the grid
-        # grid_goal = (-north_offset + 10, -east_offset + 10)
+        goal_global_position = [-122.399380, 37.794715, 0]
 
         # TODO: adapt to set goal as latitude / longitude position and convert
-        # grid_goal = random_lon_lat(data)
-        grid_goal = (lon0 + 10, lat0 + 10)
-
-        grid_goal = get_grid_item_position(north_offset, east_offset, grid_goal[0], grid_goal[1])
+        goal_end_north, goal_end_east, _ = global_to_local(goal_global_position, self.global_home)
+        grid_goal = ((int(goal_end_north) - north_offset), (int(goal_end_east) - east_offset))
 
         # Run A* to find a path from start to goal
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation

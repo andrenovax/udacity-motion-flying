@@ -48,46 +48,26 @@ It's quite confusing to make a writeup for this project, since I just follow ins
 
   ```
   position = self.global_position
-
-  self.local_position = global_to_local(position, self.global_home)
+  current_north, current_east, _ = global_to_local(position, self.global_home)
   ```
 
 4. In the starter code, the start point for planning is hardcoded as map center. Change this to be your current local position.
 
-  - add get_grid_position helper to find the local position on the grid
-    ```
-    def get_grid_position(grid, north_min, east_min, north, east):
-        north_size = grid.shape[0]
-        east_size = grid.shape[1]
-
-        x = int(np.clip(north - north_min, 0, north_size-1))
-        y = int(np.clip(east - east_min, 0, east_size-1))
-
-        return (x, y)
-    ```
+  ```
+  grid_start = (int(current_north) - north_offset, int(current_east) - east_offset)
+  ```
 
 5. In the starter code, the goal position is hardcoded as some location 10 m north and 10 m east of map center. Modify this to be set as some arbitrary position on the grid given any geodetic coordinates (latitude, longitude)
 
-  - lets generate a random longitude and latitude inside the obstacle map
+  - manually flied to the point and used that coordinate as a goal:
     ```
-    def random_lon_lat(data):
-      north_min = np.min(data[:, 0] - data[:, 3])
-      north_max = np.max(data[:, 0] + data[:, 3])
-
-      # minimum and maximum east coordinates
-      east_min = np.min(data[:, 1] - data[:, 4])
-      east_max = np.max(data[:, 1] + data[:, 4])
-
-      x = np.random.randint(north_min, north_max)
-      y = np.random.randint(east_min, east_max)
-
-      return (x, y)
+    goal_global_position = [-122.399380, 37.794715, 0]
     ```
 
-  - get goal lon, lat in the grid:
+  - convert to local position on the grid:
     ```
-    random_goal = random_lon_lat(data)
-    grid_goal = get_grid_position(grid, north_offset, east_offset, random_goal[0], random_goal[1])
+    goal_end_north, goal_end_east, _ = global_to_local(goal_global_position, self.global_home)
+    grid_goal = ((int(goal_end_north) - north_offset), (int(goal_end_east) - east_offset))
     ```
 
 6. Write your search algorithm. Minimum requirement here is to add diagonal motions to the A* implementation provided, and assign them a cost of sqrt(2). However, you're encouraged to get creative and try other methods from the lessons and beyond!

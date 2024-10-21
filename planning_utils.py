@@ -40,9 +40,6 @@ def create_grid(data, drone_altitude, safety_distance):
 
     return grid, int(north_min), int(east_min)
 
-def get_grid_item_position(north_min, east_min, north, east):
-    return (int(north - north_min), int(east - east_min))
-
 def filter_collinear_waypoints(waypoints, epsilon=1e-2):
     if len(waypoints) < 3:
         return waypoints
@@ -69,20 +66,6 @@ def filter_collinear_waypoints(waypoints, epsilon=1e-2):
     non_collinear_points.append(waypoints[-1])
     
     return non_collinear_points
-
-def random_lon_lat(data):
-    north_min = np.min(data[:, 0] - data[:, 3])
-    north_max = np.max(data[:, 0] + data[:, 3])
-
-    # minimum and maximum east coordinates
-    east_min = np.min(data[:, 1] - data[:, 4])
-    east_max = np.max(data[:, 1] + data[:, 4])
-
-    x = np.random.randint(north_min, north_max)
-    y = np.random.randint(east_min, east_max)
-
-    return (x, y)
-
 
 DIAGONAL_COST = np.sqrt(2)
 
